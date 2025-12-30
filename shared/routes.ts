@@ -1,0 +1,56 @@
+import { z } from 'zod';
+import { insertCarBrandSchema, insertScoreSchema, carBrands, scores } from './schema';
+
+export const api = {
+  brands: {
+    list: {
+      method: 'GET' as const,
+      path: '/api/brands',
+      input: z.object({
+        difficulty: z.enum(['easy', 'medium', 'hard', 'impossible']).optional(),
+        limit: z.coerce.number().optional(),
+      }).optional(),
+      responses: {
+        200: z.array(z.custom<typeof carBrands.$inferSelect>()),
+      },
+    },
+    // For seeding or internal use
+    create: {
+      method: 'POST' as const,
+      path: '/api/brands',
+      input: insertCarBrandSchema,
+      responses: {
+        201: z.custom<typeof carBrands.$inferSelect>(),
+      },
+    },
+  },
+  scores: {
+    list: {
+      method: 'GET' as const,
+      path: '/api/scores',
+      responses: {
+        200: z.array(z.custom<typeof scores.$inferSelect>()),
+      },
+    },
+    create: {
+      method: 'POST' as const,
+      path: '/api/scores',
+      input: insertScoreSchema,
+      responses: {
+        201: z.custom<typeof scores.$inferSelect>(),
+      },
+    },
+  },
+};
+
+export function buildUrl(path: string, params?: Record<string, string | number>): string {
+  let url = path;
+  if (params) {
+    Object.entries(params).forEach(([key, value]) => {
+      if (url.includes(`:${key}`)) {
+        url = url.replace(`:${key}`, String(value));
+      }
+    });
+  }
+  return url;
+}
